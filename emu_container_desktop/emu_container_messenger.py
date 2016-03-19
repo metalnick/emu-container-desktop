@@ -1,10 +1,11 @@
 import socket
+import time
 
-class EmuContainerApp:
+
+class EmuContainerMessenger:
     def __init__(self, ipaddr: str, port: int):
         self._ipaddr = ipaddr
         self._port = port
-        self._alive = False
 
     def send_message(self, message: str):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,5 +18,8 @@ class EmuContainerApp:
             sock.close()
 
 if __name__ == "__main__":
-    messager = EmuContainerApp('127.0.0.1', 55453)
-    messager.send_message('{"command": "stop", "emulator": "SNES"}')
+    messenger = EmuContainerMessenger('127.0.0.1', 55453)
+    messenger.send_message('{"command": "start", "emulator": "SNES"}')
+    time.sleep(5)
+    messenger.send_message('{"command": "stop", "emulator": "SNES"}')
+    messenger.send_message('{"command": "shutdown"}')
