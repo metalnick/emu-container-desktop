@@ -14,15 +14,19 @@ import glob
 
 class ThreadedEmuServerRequestHandler(BaseRequestHandler):
     def handle(self):
+        print("Received message...")
         # print(self.request.recv(1024).decode('UTF-8'))
         data = json.loads(self.request.recv(1024).decode('UTF-8'))
         response = json.dumps(data)
         if data["command"] == "start":
             self.request.sendall(('Got message! {}\n'.format(response)).encode())
-            self.start_emulator(data["emulator"])
+            self.start_emulator(emulator_name=data["emulator"])
+        elif data["command"] == "play_rom":
+            self.request.sednall(("Got message! {}\n".format(response)).encode())
+            self.play_rom(emulator_name=data["emulator"], rom_path=data["rom_path"])
         elif data["command"] == "stop":
             self.request.sendall(('Got message! {}\n'.format(response)).encode())
-            self.stop_emulator(data["emulator"])
+            self.stop_emulator(emulator_name=data["emulator"])
         elif data["command"] == "shutdown":
             self.request.sendall(('Got message! {}\n'.format(response)).encode())
             self.shutdown()
@@ -54,6 +58,11 @@ class ThreadedEmuServerRequestHandler(BaseRequestHandler):
 
     def get_config(self):
         return self.server.config
+
+    def play_rom(self, emulator_name: str, rom_path: str):
+        stdout, stderr = subprocess.Popen([self.get_config()[emulator_name]['Emulator'], rom_path])
+        print(stdout.decode())
+        print(stderr.decode())
 
     def start_emulator(self, emulator_name: str):
 
@@ -92,7 +101,7 @@ def main():
     config = cp.ConfigParser()
     config.read("config/emucontainer.properties")
     try:
-        start_server('127.0.0.1', 55453, config)
+        start_server('', 55453, config)
     except KeyboardInterrupt:
         sys.exit()
 

@@ -1,6 +1,8 @@
 import socket
 import time
 
+import sys
+
 
 class EmuContainerMessenger:
     def __init__(self, ipaddr: str, port: int):
@@ -18,7 +20,11 @@ class EmuContainerMessenger:
             sock.close()
 
 if __name__ == "__main__":
-    messenger = EmuContainerMessenger('127.0.0.1', 55453)
+    address = sys.argv[1]
+    port = 55435
+    if len(sys.argv) > 2:
+        port = sys.argv[2]
+    messenger = EmuContainerMessenger(address, port)
     # messenger.send_message('{"command": "get_roms", "emulator": "SNES"}')
     # messenger.send_message('{"command": "get_emulators"}')
     messenger.send_message('{"command": "start", "emulator": "SNES"}')
