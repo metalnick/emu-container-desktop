@@ -13,16 +13,16 @@ import glob
 
 
 class ThreadedEmuServerRequestHandler(BaseRequestHandler):
+
     def handle(self):
         print("Received message...")
-        # print(self.request.recv(1024).decode('UTF-8'))
         data = json.loads(self.request.recv(1024).decode('UTF-8'))
         response = json.dumps(data)
         if data["command"] == "start":
             self.request.sendall(('Got message! {}\n'.format(response)).encode())
             self.start_emulator(emulator_name=data["emulator"])
         elif data["command"] == "play_rom":
-            self.request.sednall(("Got message! {}\n".format(response)).encode())
+            self.request.sendall(("Got message! {}\n".format(response)).encode())
             self.play_rom(emulator_name=data["emulator"], rom_path=data["rom_path"])
         elif data["command"] == "stop":
             self.request.sendall(('Got message! {}\n'.format(response)).encode())
@@ -60,9 +60,10 @@ class ThreadedEmuServerRequestHandler(BaseRequestHandler):
         return self.server.config
 
     def play_rom(self, emulator_name: str, rom_path: str):
-        stdout, stderr = subprocess.Popen([self.get_config()[emulator_name]['Emulator'], rom_path])
-        print(stdout.decode())
-        print(stderr.decode())
+        pid = subprocess.Popen([self.get_config()[emulator_name]['Emulator'], rom_path]).pid
+        pid_file = open(emulator_name+".pid", "w")
+        pid_file.write(str(pid))
+        pid_file.close()
 
     def start_emulator(self, emulator_name: str):
 
@@ -72,8 +73,14 @@ class ThreadedEmuServerRequestHandler(BaseRequestHandler):
         print(stderr.decode())
 
     def stop_emulator(self, emulator_name: str):
-        pid = subprocess.check_output(["pidof", self.get_config()[emulator_name]['Emulator']])
-        os.kill(int(pid), signal.SIGTERM)
+        pid_file = open(emulator_name+".pid", "r")
+        try:
+            if os.path.isfile(emulator_name+".pid"):
+                pid = pid_file.readline()
+                os.kill(int(pid), signal.SIGINT)
+                os.remove(emulator_name+".pid")
+        finally:
+            pid_file.close()
 
     def shutdown(self):
         self.server.shutdown()
@@ -100,6 +107,7 @@ def start_server(address: str, port: int, config: cp, name='EmuServer') -> EmuSe
 def main():
     config = cp.ConfigParser()
     config.read("config/emucontainer.properties")
+    os.remove('*.pid')
     try:
         start_server('', 55453, config)
     except KeyboardInterrupt:

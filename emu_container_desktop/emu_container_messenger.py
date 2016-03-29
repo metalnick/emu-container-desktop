@@ -23,11 +23,11 @@ if __name__ == "__main__":
     address = sys.argv[1]
     port = 55435
     if len(sys.argv) > 2:
-        port = sys.argv[2]
+        port = int(sys.argv[2])
     messenger = EmuContainerMessenger(address, port)
     # messenger.send_message('{"command": "get_roms", "emulator": "SNES"}')
     # messenger.send_message('{"command": "get_emulators"}')
-    messenger.send_message('{"command": "start", "emulator": "SNES"}')
-    # time.sleep(5)
-    # messenger.send_message('{"command": "stop", "emulator": "SNES"}')
+    messenger.send_message('{"command": "play_rom", "emulator": "SNES", "rom_path": "/home/nleytem/Downloads/SNESRoms/Super Metroid (Japan, USA) (En,Ja).sfc"}')
+    time.sleep(5)
+    messenger.send_message('{"command": "stop", "emulator": "SNES"}')
     # messenger.send_message('{"command": "shutdown"}')
